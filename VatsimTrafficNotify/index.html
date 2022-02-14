@@ -1,0 +1,27 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+</head>
+<body>
+  <div id="data"></div>
+</body>
+<script>
+  var l = null;
+  fetch(
+    'https://localhost:44315/MainService.asmx/GetData', {
+    headers: {
+      'Content-Type': 'application/json'
+      // 'Content-Type': 'application/x-www-form-urlencoded',
+    }
+  })
+    .then(response => response.json())
+    .then(data => {
+      l = data;
+      document.getElementById('data').innerHTML = JSON.stringify(data.d);
+      console.log(data);
+    });
+
+</script>
+</html>
