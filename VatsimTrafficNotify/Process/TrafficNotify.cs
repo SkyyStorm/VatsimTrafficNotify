@@ -14,12 +14,13 @@ namespace VatsimTrafficNotify.Process
     {
         private static Thread _thread;
         private static Thread _notificationThread;
-        private static List<string> _code = new List<string>() { "FA", "FV", "FM", "FY" };
+        private static List<string> _code = new List<string>() { "FA", "FY", "FB", "FV", "FQ", "FD", "FX" };
+
         private static bool _running = false;
-        private static int _regionalAlertLevel = 2;
-        private static int _outboundAlertLevel = 2;
-        private static int _inboundAlertLevel = 2;
-        private static int _growCount = 2;
+        private static int _regionalAlertLevel = 3;
+        private static int _outboundAlertLevel = 3;
+        private static int _inboundAlertLevel = 3;
+        private static int _growCount = 3;
 
         private static TrafficAlert _regionalAlert = null;
         private static TrafficAlert _inboundAlert = null;
@@ -39,12 +40,24 @@ namespace VatsimTrafficNotify.Process
         }
         public static object GetAlerts()
         {
-            return new List<TrafficAlert>()
+            return new
             {
-                _regionalAlert, 
-                _inboundAlert,
-                _outboundAlert
+                Alerts = new List<TrafficAlert>()
+                {
+                    _regionalAlert,
+                    _inboundAlert,
+                    _outboundAlert
+                },
+                Regions = _code
             };
+        }
+
+        public static void SetRegions(string[] regions)
+        {
+            _regionalAlert = null;
+            _inboundAlert = null;
+            _outboundAlert = null;
+            _code = regions.ToList();
         }
 
         private static void Run()
@@ -60,6 +73,8 @@ namespace VatsimTrafficNotify.Process
 
 
                     vatsimData.pilots = vatsimData.pilots.Where(p => p.flight_plan != null).ToList();
+                    vatsimData.pilots = vatsimData.pilots.Where(p => !string.IsNullOrEmpty(p.flight_plan.arrival)
+                                                                && !string.IsNullOrEmpty(p.flight_plan.departure)).ToList();
                     vatsimData.prefiles = vatsimData.prefiles.Where(pf => pf.flight_plan != null).ToList();
 
                     var regionalFlights = vatsimData.pilots
@@ -78,7 +93,7 @@ namespace VatsimTrafficNotify.Process
                     // Regional Traffic
                     if (_regionalAlert != null)
                     {
-                        if (regionalFlights.Count() < _regionalAlert.AircraftCount - 1)
+                        if (regionalFlights.Count() < _regionalAlertLevel - 1)
                         {
                             _regionalAlert = null;
                         }
@@ -89,9 +104,10 @@ namespace VatsimTrafficNotify.Process
                             var firstArrivalString = firstTimespan.ArrivalTime.ToString(@"hh\:mm");
                             _regionalAlert.AircraftCount = regionalFlights.Count();
                             _regionalAlert.Update = true;
-                            _regionalAlert.FirstArrivalTime = firstArrival;
+                            _regionalAlert.FirstArrivalTime = firstArrival.ToString("HH:mm");
                             _regionalAlert.FirstArrivalTimespan = firstArrivalString;
                             _regionalAlert.FirstArrivalLocation = firstTimespan.ArrivalAirport;
+                            Helpers.TelegramHelper.SendUpdate(_regionalAlert, true);
                         }
                     }
                     else
@@ -105,20 +121,21 @@ namespace VatsimTrafficNotify.Process
                             {
                                 Message = "Traffic is increasing in region.",
                                 AircraftCount = regionalFlights.Count(),
-                                Alert = AlertType.Regional,
+                                Alert = AlertType.Regional.ToString(),
                                 Timestamp = DateTime.Now,
                                 Update = true,
-                                FirstArrivalTime = firstArrival,
+                                FirstArrivalTime = firstArrival.ToString("HH:mm"),
                                 FirstArrivalTimespan = firstArrivalString,
                                 FirstArrivalLocation = firstTimespan.ArrivalAirport
-                        };
+                            };
+                            Helpers.TelegramHelper.SendUpdate(_regionalAlert);
                         }
                     }
 
                     // Inbound Traffic
                     if (_inboundAlert != null)
                     {
-                        if (inboundFlights.Count() < _inboundAlert.AircraftCount - 1)
+                        if (inboundFlights.Count() < _inboundAlertLevel - 1)
                         {
                             _inboundAlert = null;
                         }
@@ -129,9 +146,10 @@ namespace VatsimTrafficNotify.Process
                             var firstArrivalString = firstTimespan.ArrivalTime.ToString(@"hh\:mm");
                             _inboundAlert.AircraftCount = inboundFlights.Count();
                             _inboundAlert.Update = true;
-                            _inboundAlert.FirstArrivalTime = firstArrival;
+                            _inboundAlert.FirstArrivalTime = firstArrival.ToString("HH:mm");
                             _inboundAlert.FirstArrivalTimespan = firstArrivalString;
                             _inboundAlert.FirstArrivalLocation = firstTimespan.ArrivalAirport;
+                            Helpers.TelegramHelper.SendUpdate(_inboundAlert, true);
                         }
                     }
                     else
@@ -145,20 +163,21 @@ namespace VatsimTrafficNotify.Process
                             {
                                 Message = "Traffic is increasing in region.",
                                 AircraftCount = inboundFlights.Count(),
-                                Alert = AlertType.Regional,
+                                Alert = AlertType.Inbound.ToString(),
                                 Timestamp = DateTime.Now,
                                 Update = true,
-                                FirstArrivalTime = firstArrival,
+                                FirstArrivalTime = firstArrival.ToString("HH:mm"),
                                 FirstArrivalTimespan = firstArrivalString,
                                 FirstArrivalLocation = firstTimespan.ArrivalAirport
-                        };
+                            };
+                            Helpers.TelegramHelper.SendUpdate(_inboundAlert);
                         }
                     }
 
                     // Outbound Traffic
                     if (_outboundAlert != null)
                     {
-                        if (outboundFlights.Count() < _outboundAlert.AircraftCount - 1)
+                        if (outboundFlights.Count() < _outboundAlertLevel - 1)
                         {
                             _outboundAlert = null;
                         }
@@ -169,9 +188,8 @@ namespace VatsimTrafficNotify.Process
                             var firstArrivalString = firstTimespan.ArrivalTime.ToString(@"hh\:mm");
                             _outboundAlert.AircraftCount = outboundFlights.Count();
                             _outboundAlert.Update = true;
-                            //_outboundAlert.FirstArrivalTime = firstArrival;
-                            //_outboundAlert.FirstArrivalTimespan = firstArrivalString;
-                            //_outboundAlert.FirstArrivalLocation = firstTimespan.ArrivalAirport;
+                            _outboundAlert.OutboundAirport = GetOutboundAirport(outboundFlights);
+                            Helpers.TelegramHelper.SendUpdate(_outboundAlert, true);
                         }
                     }
                     else
@@ -185,13 +203,13 @@ namespace VatsimTrafficNotify.Process
                             {
                                 Message = "Traffic is increasing in region.",
                                 AircraftCount = outboundFlights.Count(),
-                                Alert = AlertType.Regional,
+                                Alert = AlertType.Outbound.ToString(),
                                 Timestamp = DateTime.Now,
                                 Update = true,
-                                //FirstArrivalTime = firstArrival,
-                                //FirstArrivalTimespan = firstArrivalString,
-                                //FirstArrivalLocation = firstTimespan.ArrivalAirport
-                        };
+                                OutboundAirport = GetOutboundAirport(outboundFlights)
+
+                            };
+                            Helpers.TelegramHelper.SendUpdate(_outboundAlert);
                         }
                     }
 
@@ -216,6 +234,14 @@ namespace VatsimTrafficNotify.Process
         private static void RunNotifications()
         {
 
+        }
+
+        private static string GetOutboundAirport(IEnumerable<Pilot> flights)
+        {
+            var result = flights.GroupBy(f => f.flight_plan.departure)
+                .Select(itemGroup => new { Item = itemGroup.Key, Count = itemGroup.Count() })
+                    .OrderByDescending(Item => Item.Count).ThenBy(Item => Item.Item).First().Item;
+            return result;
         }
 
         private static FirstArrival CalculateFirstArrivalTime(IEnumerable<Pilot> flights)
@@ -261,7 +287,7 @@ namespace VatsimTrafficNotify.Process
                 {
                     speed = -1;
                 }
-                if (speed > -1)
+                if (speed > 0)
                 {
                     var nm = (double)planeCoord.GetDistanceTo(arrAirportCoord) * 0.000539957d;
                     var hourDecimal = nm / speed;
@@ -287,16 +313,18 @@ namespace VatsimTrafficNotify.Process
         public string Message { get; set; }
         public int AircraftCount { get; set; }
         public DateTime Timestamp { get; set; }
-        public AlertType Alert { get; set; }
+        public string Alert { get; set; }
         public bool Update { get; set; }
-        public DateTime FirstArrivalTime { get; set; }
+        public string FirstArrivalTime { get; set; }
         public string FirstArrivalTimespan { get; set; }
         public string FirstArrivalLocation { get; set; }
+        public string OutboundAirport { get; set; }
+        public List<Pilot> Planes { get; set; }
     }
 
-    public class FirstArrival 
+    public class FirstArrival
     {
-        public string ArrivalAirport { get; set;} 
+        public string ArrivalAirport { get; set; }
         public TimeSpan ArrivalTime { get; set; }
     }
 

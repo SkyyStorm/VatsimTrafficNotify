@@ -1,27 +1,141 @@
-﻿<!DOCTYPE html>
-<html>
+﻿<html>
 <head>
-    <meta charset="utf-8" />
-    <title></title>
+  <meta charset="utf-8" />
+  <title>Vatsim Traffic Alert</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+        integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+        crossorigin="" />
 </head>
+<style>
+  .card.narrow {
+    max-width: 400px;
+  }
+</style>
 <body>
-  <div id="data"></div>
+  <div class="container">
+    <div class="columns is-centered mt-5">
+      <div class="column is-half">
+        <h2 class="title has-text-info">Vatsim Traffic Alert - <span id="lblTitle"></span></h2>
+      </div>
+    </div>
+      <div class="columns is-centered mt-5">
+
+        <div id="colCards" class="column is-half box">
+        </div>
+      </div>
+    </div>
 </body>
 <script>
   var l = null;
-  fetch(
-    'https://localhost:44315/MainService.asmx/GetData', {
-    headers: {
-      'Content-Type': 'application/json'
-      // 'Content-Type': 'application/x-www-form-urlencoded',
-    }
-  })
-    .then(response => response.json())
-    .then(data => {
-      l = data;
-      document.getElementById('data').innerHTML = JSON.stringify(data.d);
-      console.log(data);
-    });
+  var uri = `https://${window.location.host}${window.location.pathname}`;
+  if (uri.endsWith('html')) {
+    let split = uri.split('/');
+    let final = split.pop();
+    uri = split.join('/');
+    console.log(uri);
+  }
+  uri += '/MainService.asmx';
+  document.addEventListener('DOMContentLoaded', () => {    
+    getCards();
+  });
 
+
+  function getCards() {
+    fetch(
+      `${uri}/GetData`, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+      .then(response => response.json())
+      .then(data => {
+        l = data;
+        let mainStr = '';
+        data.d.Alerts.forEach((item, index) => {
+          if (item != null) {
+            if (item.Alert !== 'Outbound') {
+              let timeSpan = item.FirstArrivalTimespan.split(':');
+              let color = "has-background-success-light";
+
+              if (item.AircraftCount >= 5 && item.AircraftCount < 7) {
+                color = 'has-background-warning-light';
+              }
+              if (item.AircraftCount >= 7) {
+                color = 'has-background-danger-light';
+              }
+              let hourStr = parseInt(timeSpan[0]) !== 1 ? "hours" : "hour";
+              let minuteStr = parseInt(timeSpan[1]) !== 1 ? "minutes" : "minute";
+              cardStr = `<div class="card mt-5 narrow">                  
+                        <div class="card-content">
+                          <div class="media ${color}">
+                            <div class="media-left">
+                              <figure class="image is-48x48">
+                                
+                              </figure>
+                            </div>
+                            <div class="media-content">
+                              <p class="title is-4">${item.Alert} Traffic</p>
+                              <p class="subtitle is-6">Aircraft Count: ${item.AircraftCount}</p>
+                            </div>
+                          </div>
+                          <div class="content">
+                            First arrival at ${item.FirstArrivalLocation} in about ${parseInt(timeSpan[0])} ${hourStr} and ${parseInt(timeSpan[1])} ${minuteStr}. (Arriving at ${item.FirstArrivalTime}z)
+                          </div>
+                        </div>
+                      </div>`
+              mainStr += cardStr;
+            }
+            else {             
+              let color = "has-background-success-light";
+              if (item.AircraftCount >= 5 && item.AircraftCount < 7) {
+                color = 'has-background-warning-light';
+              }
+              if (item.AircraftCount >= 7) {
+                color = 'has-background-danger-light';
+              }
+              cardStr = `<div class="card mt-5 narrow">                  
+                        <div class="card-content">
+                          <div class="media ${color}">
+                            <div class="media-left">
+                              <figure class="image is-48x48">
+                                
+                              </figure>
+                            </div>
+                            <div class="media-content">
+                              <p class="title is-4">${item.Alert} Traffic</p>
+                              <p class="subtitle is-6">Aircraft Count: ${item.AircraftCount}</p>
+                            </div>
+                          </div>
+                          <div class="content">                            
+                          </div>
+                        </div>
+                      </div>`
+              mainStr += cardStr;
+            }
+          }
+        });
+        document.getElementById('lblTitle').innerHTML = `${data.d.Regions}`;
+        if (mainStr === '') {
+          mainStr = '<h3 class="subtitle has-text-grey">No alerts currently</h3>';
+        }
+        document.getElementById('colCards').innerHTML = mainStr;
+      });
+    setTimeout(() => { getCards(); }, 10000);
+  }
+
+  function setRegion(regions, password) {
+    fetch(
+      `${uri}/SetRegion`, {
+        method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ regions: regions, password: password })
+    });
+  }
+  
+  
 </script>
 </html>

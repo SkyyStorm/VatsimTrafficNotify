@@ -24,10 +24,16 @@ namespace VatsimTrafficNotify
         [ScriptMethod(UseHttpGet = true, ResponseFormat = ResponseFormat.Json)]
         public object GetData()
         {
-            return new
-            {
-                Alerts = TrafficNotify.GetAlerts()
-            };
+            return TrafficNotify.GetAlerts();            
+        }
+
+        [WebMethod]
+        [ScriptMethod( ResponseFormat = ResponseFormat.Json)]
+        public void SetRegion(string[] regions, string password) 
+        {
+            if (password != "VatsimSouthAfrica!")
+                return;
+            TrafficNotify.SetRegions(regions);
         }
     }
 }
