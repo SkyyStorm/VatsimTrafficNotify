@@ -181,6 +181,7 @@
     </Compile>
     <Compile Include="Models\AirportData.cs" />
     <Compile Include="Models\BasicResponse.cs" />
+    <Compile Include="Models\Config.cs" />
     <Compile Include="Models\IBasicResponse.cs" />
     <Compile Include="Models\VatsimData.cs" />
     <Compile Include="Process\DataStore.cs" />
@@ -207,6 +208,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="airports_new.dat" />
+    <Content Include="config.json" />
     <None Include="packages.config" />
   </ItemGroup>
   <PropertyGroup>

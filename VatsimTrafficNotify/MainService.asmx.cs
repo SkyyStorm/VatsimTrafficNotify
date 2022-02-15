@@ -35,5 +35,12 @@ namespace VatsimTrafficNotify
                 return;
             TrafficNotify.SetRegions(regions);
         }
+
+        [WebMethod]
+        [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
+        public void UpdateConfig()
+        {
+            TrafficNotify.UpdateConfig();
+        }
     }
 }

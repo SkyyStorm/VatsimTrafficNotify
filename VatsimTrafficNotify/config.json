@@ -1,0 +1,10 @@
+{
+  "regionName": "VATSSA",
+  "regionCodes": [ "FA", "FY", "FB", "FV", "FQ", "FD", "FX" ],
+  "regionCenterPoint": [ -26.051257, 24.781342 ],
+  "regionRadius":  1680,
+  "alertLevelRegional": 0,
+  "alertLevelInbound": 0,
+  "alertLevelOutbound": 0,
+  "alertLevelGrow": 0
+}

@@ -12,6 +12,7 @@ namespace VatsimTrafficNotify.Helpers
         private static string _api = "5240174442:AAEUgtv1MlDQjSrBnHq3BpB-_IsuM-DCK9E";
         public static void SendUpdate(TrafficAlert alert, bool isGrow = false)
         {
+            return;
             var bot = new TelegramBotClient(_api);
             var message = string.Empty;
             var growString = isGrow ? $"{alert.Alert} Traffic Update" : $"{alert.Alert} Traffic Alert";

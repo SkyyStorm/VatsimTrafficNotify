@@ -17,11 +17,10 @@
   <div class="container">
     <div class="columns is-centered mt-5">
       <div class="column is-half">
-        <h2 class="title has-text-info">Vatsim Traffic Alert - <span id="lblTitle"></span></h2>
+        <h2 class="title has-text-info">Vatsim Traffic Alert - <span id="lblTitle"></span></h2><a id="btnConfig" class="button is-small">Reload Config</a>
       </div>
     </div>
       <div class="columns is-centered mt-5">
-
         <div id="colCards" class="column is-half box">
         </div>
       </div>
@@ -39,6 +38,9 @@
   uri += '/MainService.asmx';
   document.addEventListener('DOMContentLoaded', () => {    
     getCards();
+    document.getElementById('btnConfig').addEventListener('click', () => {
+      updateConfig();
+    });
   });
 
 
@@ -128,13 +130,24 @@
   function setRegion(regions, password) {
     fetch(
       `${uri}/SetRegion`, {
-        method: 'POST',
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({ regions: regions, password: password })
     });
   }
+
+
+    function updateConfig() {
+      fetch(
+        `${uri}/UpdateConfig`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }       
+      });
+    }
   
   
 </script>
