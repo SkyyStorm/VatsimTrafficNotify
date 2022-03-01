@@ -33,6 +33,7 @@ namespace VatsimTrafficNotify.Process
         public string FirstArrivalTimespan { get; set; }
         public string Message { get; set; }
         public string OutboundAirport { get; set; }
+        public List<string> AirportList { get; set; }
         public List<Pilot> Planes { get; set; }
         public DateTime Timestamp { get; set; }
         public bool Update { get; set; }
@@ -46,6 +47,7 @@ namespace VatsimTrafficNotify.Process
         private static TrafficAlert _inboundAlert = null;
         private static TrafficAlert _outboundAlert = null;
         private static TrafficAlert _regionalAlert = null;
+        private static TrafficAlert _highTrafficAlert = null;
         private static bool _running = false;
         private static Thread _thread;
         private static double _toNM = 0.000539957d;
@@ -233,6 +235,19 @@ namespace VatsimTrafficNotify.Process
                         .Where(p => !_config.RegionCodes.Any(c => c == p.flight_plan.departure.ToUpper().Substring(0, 2))
                         && _config.RegionCodes.Any(c => c == p.flight_plan.arrival.ToUpper().Substring(0, 2)));
 
+                    var allTraffic = outboundFlights.Concat(inboundFlights);
+                    List<string> busyAirports = outboundFlights
+                        .Select(at => at.flight_plan.departure).ToList();
+                    busyAirports.Concat(inboundFlights
+                        .Select(at => at.flight_plan.arrival).ToList());
+                    // Now with a List<string> of all arrival and departure airports at their counts
+                    // Calculate the count for each one
+                    var busyAirportsProcessed = busyAirports.GroupBy(ba => ba)
+                        .Select(itemGroup => new { Item = itemGroup.Key, Count = itemGroup.Count() }).OrderByDescending(bap => bap.Count);
+                    var highTrafficList = busyAirportsProcessed.Where(bap => bap.Count > _config.AlertLevelGrow);
+                    // Make above a class so that you can add it to the TrafficAlert class
+
+
                     // Regional Traffic
                     regionalFlights = CheckPilotDistances(regionalFlights);
                     if (_regionalAlert != null)
@@ -363,6 +378,49 @@ namespace VatsimTrafficNotify.Process
                             Helpers.TelegramHelper.SendUpdate(_outboundAlert);
                         }
                     }
+
+                    // Airport Specific Inbound and Outbound
+                    if (_highTrafficAlert != null)
+                    {
+                        if (!highTrafficList.Any())
+                        {
+                            _outboundAlert = null;
+                        }
+                        else if (highTrafficList.Any() &&
+                            highTrafficList.First().Count < _config.AlertLevelGrow - 1)
+                        {
+                            _outboundAlert = null;
+                        }
+                        else if (highTrafficList.Any() &&
+                            highTrafficList.First().Count > _config.AlertLevelGrow + _config.AlertLevelGrow)
+                        { 
+                            _outboundAlert.Update = true;
+                            _outboundAlert.OutboundAirport = GetOutboundAirport(outboundFlights);
+                            _outboundAlert.Planes = outboundFlights.ToList();
+                            Helpers.TelegramHelper.SendUpdate(_outboundAlert, true);
+                        }
+                    }
+                    else
+                    {
+                        if (outboundFlights.Count() > _config.AlertLevelOutbound)
+                        {
+                            var firstTimespan = CalculateFirstArrivalTime(outboundFlights);
+                            var firstArrival = DateTime.UtcNow.Add(firstTimespan.ArrivalTime);
+                            var firstArrivalString = firstTimespan.ArrivalTime.ToString(@"hh\:mm");
+                            _outboundAlert = new TrafficAlert()
+                            {
+                                Message = "Traffic is increasing in region.",
+                                AircraftCount = outboundFlights.Count(),
+                                Alert = AlertType.Outbound.ToString(),
+                                Timestamp = DateTime.Now,
+                                Update = true,
+                                OutboundAirport = GetOutboundAirport(outboundFlights),
+                                Planes = outboundFlights.ToList()
+                            };
+                            Helpers.TelegramHelper.SendUpdate(_outboundAlert);
+                        }
+                    }
+
                 }
                 catch (Exception ex)
                 {
