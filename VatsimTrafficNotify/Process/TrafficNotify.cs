@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading;
 using System.Web.Hosting;
 using VatsimATCInfo.Helpers;
+using VatsimTrafficNotify.Helpers;
 using VatsimTrafficNotify.Models;
 
 namespace VatsimTrafficNotify.Process
@@ -214,6 +215,8 @@ namespace VatsimTrafficNotify.Process
         {
             _running = true;
 
+            TelegramHelper.SendMessage("Starting Traffic Alert monitoring");
+            
             while (_running)
             {
                 VatsimData vatsimData = new VatsimData();
@@ -236,9 +239,7 @@ namespace VatsimTrafficNotify.Process
 
                     var inboundFlights = vatsimData.pilots
                         .Where(p => !_config.RegionCodes.Any(c => c == p.flight_plan.departure.ToUpper().Substring(0, 2))
-                        && _config.RegionCodes.Any(c => c == p.flight_plan.arrival.ToUpper().Substring(0, 2)));
-
-                 
+                        && _config.RegionCodes.Any(c => c == p.flight_plan.arrival.ToUpper().Substring(0, 2)));                 
 
                     var processedOutbound = CheckPilotDistances(outboundFlights);
                     var processedInbound = CheckPilotDistances(inboundFlights);

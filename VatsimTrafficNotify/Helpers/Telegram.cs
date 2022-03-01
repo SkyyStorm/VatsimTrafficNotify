@@ -17,8 +17,6 @@ namespace VatsimTrafficNotify.Helpers
             var message = string.Empty;
             var growString = isGrow ? $"{alert.Alert} Traffic Update" : $"{alert.Alert} Traffic Alert";
 
-            
-
             switch (alert.Alert)
             {
                 case "Inbound":
