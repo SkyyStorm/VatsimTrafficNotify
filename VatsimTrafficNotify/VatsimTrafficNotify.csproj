@@ -180,6 +180,7 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Models\AirportData.cs" />
+    <Compile Include="Models\AirportInfo.cs" />
     <Compile Include="Models\BasicResponse.cs" />
     <Compile Include="Models\Config.cs" />
     <Compile Include="Models\IBasicResponse.cs" />

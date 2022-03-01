@@ -57,7 +57,7 @@
         let mainStr = '';
         data.d.Alerts.forEach((item, index) => {
           if (item != null) {
-            if (item.Alert !== 'Outbound') {
+            if (item.Alert === 'Inbound' || item.Alert === 'Regional') {
               let timeSpan = item.FirstArrivalTimespan.split(':');
               let color = "has-background-success-light";
 
@@ -84,6 +84,28 @@
                           </div>
                           <div class="content">
                             First arrival at ${item.FirstArrivalLocation} in about ${parseInt(timeSpan[0])} ${hourStr} and ${parseInt(timeSpan[1])} ${minuteStr}. (Arriving at ${item.FirstArrivalTime}z)
+                          </div>
+                        </div>
+                      </div>`
+              mainStr += cardStr;
+            }
+            else if (item.Alert === 'High') {
+              let color = "has-background-success-light";              
+              cardStr = `<div class="card mt-5 narrow">                  
+                        <div class="card-content">
+                          <div class="media ${color}">
+                            <div class="media-left">
+                              <figure class="image is-48x48">
+                                
+                              </figure>
+                            </div>
+                            <div class="media-content">
+                              <p class="title is-4">${item.Alert} Traffic</p>
+                              
+                            </div>
+                          </div>
+                          <div class="content">
+                            <p class="subtitle is-6">At these airports: ${item.BusyAirports.map(ba => ba.Icao).join(',')}</p>
                           </div>
                         </div>
                       </div>`

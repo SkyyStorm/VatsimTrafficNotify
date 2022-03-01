@@ -15,7 +15,8 @@ namespace VatsimTrafficNotify.Process
     {
         Regional,
         Inbound,
-        Outbound
+        Outbound,
+        High
     }
 
     public class FirstArrival
@@ -35,6 +36,7 @@ namespace VatsimTrafficNotify.Process
         public string OutboundAirport { get; set; }
         public List<string> AirportList { get; set; }
         public List<Pilot> Planes { get; set; }
+        public List<AirportInfo> BusyAirports { get; set; }
         public DateTime Timestamp { get; set; }
         public bool Update { get; set; }
     }
@@ -60,7 +62,8 @@ namespace VatsimTrafficNotify.Process
                 {
                     _regionalAlert,
                     _inboundAlert,
-                    _outboundAlert
+                    _outboundAlert,
+                    _highTrafficAlert
                 },
                 Regions = _config.RegionCodes
             };
@@ -235,11 +238,15 @@ namespace VatsimTrafficNotify.Process
                         .Where(p => !_config.RegionCodes.Any(c => c == p.flight_plan.departure.ToUpper().Substring(0, 2))
                         && _config.RegionCodes.Any(c => c == p.flight_plan.arrival.ToUpper().Substring(0, 2)));
 
-                    var allTraffic = outboundFlights.Concat(inboundFlights);
-                    List<string> busyAirports = outboundFlights
+                 
+
+                    var processedOutbound = CheckPilotDistances(outboundFlights);
+                    var processedInbound = CheckPilotDistances(inboundFlights);
+
+                    List<string> busyAirports = processedOutbound
                         .Select(at => at.flight_plan.departure).ToList();
-                    busyAirports.Concat(inboundFlights
-                        .Select(at => at.flight_plan.arrival).ToList());
+                    busyAirports = busyAirports.Concat(processedInbound
+                        .Select(at => at.flight_plan.arrival).ToList()).ToList();
                     // Now with a List<string> of all arrival and departure airports at their counts
                     // Calculate the count for each one
                     var busyAirportsProcessed = busyAirports.GroupBy(ba => ba)
@@ -384,40 +391,47 @@ namespace VatsimTrafficNotify.Process
                     {
                         if (!highTrafficList.Any())
                         {
-                            _outboundAlert = null;
+                            _highTrafficAlert = null;
                         }
                         else if (highTrafficList.Any() &&
-                            highTrafficList.First().Count < _config.AlertLevelGrow - 1)
+                            highTrafficList.First().Count < 1)
                         {
-                            _outboundAlert = null;
+                            _highTrafficAlert = null;
                         }
                         else if (highTrafficList.Any() &&
-                            highTrafficList.First().Count > _config.AlertLevelGrow + _config.AlertLevelGrow)
-                        { 
-                            _outboundAlert.Update = true;
-                            _outboundAlert.OutboundAirport = GetOutboundAirport(outboundFlights);
-                            _outboundAlert.Planes = outboundFlights.ToList();
-                            Helpers.TelegramHelper.SendUpdate(_outboundAlert, true);
+                            highTrafficList.First().Count > 2)
+                        {
+                            _highTrafficAlert.Update = true;
+                            _highTrafficAlert.OutboundAirport = GetOutboundAirport(outboundFlights);
+                            _highTrafficAlert.Planes = outboundFlights.ToList();
+                            _highTrafficAlert.BusyAirports = highTrafficList.Select(htl => new AirportInfo()
+                            {
+                                Icao = htl.Item,
+                                Count = htl.Count
+                            }).ToList();
+                            Helpers.TelegramHelper.SendUpdate(_highTrafficAlert, true);
                         }
                     }
                     else
                     {
-                        if (outboundFlights.Count() > _config.AlertLevelOutbound)
-                        {
-                            var firstTimespan = CalculateFirstArrivalTime(outboundFlights);
-                            var firstArrival = DateTime.UtcNow.Add(firstTimespan.ArrivalTime);
-                            var firstArrivalString = firstTimespan.ArrivalTime.ToString(@"hh\:mm");
-                            _outboundAlert = new TrafficAlert()
+                        if (highTrafficList.Count() > 0)
+                        {                            
+                            _highTrafficAlert = new TrafficAlert()
                             {
                                 Message = "Traffic is increasing in region.",
-                                AircraftCount = outboundFlights.Count(),
-                                Alert = AlertType.Outbound.ToString(),
+                                AircraftCount = highTrafficList.Count(),
+                                Alert = AlertType.High.ToString(),
                                 Timestamp = DateTime.Now,
                                 Update = true,
-                                OutboundAirport = GetOutboundAirport(outboundFlights),
-                                Planes = outboundFlights.ToList()
-                            };
-                            Helpers.TelegramHelper.SendUpdate(_outboundAlert);
+                                OutboundAirport = null,
+                                Planes = null,
+                                BusyAirports = highTrafficList.Select(htl => new AirportInfo()
+                                {
+                                    Icao = htl.Item,
+                                    Count = htl.Count
+                                }).ToList()
+                        };
+                            Helpers.TelegramHelper.SendUpdate(_highTrafficAlert);
                         }
                     }
 
