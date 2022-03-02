@@ -46,13 +46,13 @@ namespace VatsimTrafficNotify.Helpers
                     break;
             }
 
-            var result = bot.SendTextMessageAsync(-744399034, message,Telegram.Bot.Types.Enums.ParseMode.Html).Result;            
+            var result = bot.SendTextMessageAsync(-1001754702232, message,Telegram.Bot.Types.Enums.ParseMode.Html).Result;            
         }
 
         public static void SendMessage(string message)
         {
             var bot = new TelegramBotClient(_api);
-            var result = bot.SendTextMessageAsync(-744399034, message).Result;
+            var result = bot.SendTextMessageAsync(-1001754702232, message).Result;
 
         }
     }
