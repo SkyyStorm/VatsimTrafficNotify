@@ -15,6 +15,9 @@ namespace VatsimTrafficNotify.Models
         public int AlertLevelInbound { get; set; }
         public int AlertLevelOutbound { get; set; }
         public int AlertLevelGrow { get; set; }
+        public Int64 TelegramGroupId { get; set; }
+        public string TelegramApi { get; set; }
+        public string Password { get; set; }
 
     }
 }

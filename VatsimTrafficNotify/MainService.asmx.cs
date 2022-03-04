@@ -31,8 +31,10 @@ namespace VatsimTrafficNotify
         [ScriptMethod( ResponseFormat = ResponseFormat.Json)]
         public void SetRegion(string[] regions, string password) 
         {
-            if (password != "VatsimSouthAfrica!")
-                return;
+            if (password != TrafficNotify.GetConfig().Password)
+            {
+                throw new Exception("Incorrect password");
+            }
             TrafficNotify.SetRegions(regions);
         }
 
@@ -41,6 +43,17 @@ namespace VatsimTrafficNotify
         public void UpdateConfig()
         {
             TrafficNotify.UpdateConfig();
+        }
+
+        [WebMethod]
+        [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
+        public void RestartService(string password)
+        {
+            if (password != TrafficNotify.GetConfig().Password)
+            {
+                throw new Exception("Incorrect password");
+            }
+            TrafficNotify.StartProcess();
         }
     }
 }

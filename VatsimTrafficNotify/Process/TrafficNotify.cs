@@ -54,6 +54,7 @@ namespace VatsimTrafficNotify.Process
         private static bool _running = false;
         private static Thread _thread;
         private static double _toNM = 0.000539957d;
+        private static string _error = "";
 
         public static object GetAlerts()
         {
@@ -66,15 +67,23 @@ namespace VatsimTrafficNotify.Process
                     _outboundAlert,
                     _highTrafficAlert
                 },
-                Regions = _config.RegionCodes
+                Regions = _config.RegionCodes,
+                Error = _error
             };
         }
 
-        public static Config GetConfig()
+        public static Config LoadConfig()
         {
-            var configFile = File.ReadAllText(Path.Combine(HostingEnvironment.ApplicationPhysicalPath, "config.json"));
-            var config = JsonConvert.DeserializeObject<Config>(configFile);
-            return config;
+            try
+            {
+                var configFile = File.ReadAllText(Path.Combine(HostingEnvironment.ApplicationPhysicalPath, "config.json"));
+                var config = JsonConvert.DeserializeObject<Config>(configFile);
+                return config;
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
         }
 
         public static void SetRegions(string[] regions)
@@ -85,26 +94,42 @@ namespace VatsimTrafficNotify.Process
             _config.RegionCodes = regions.ToList();
         }
 
+        public static void SetError(string error)
+        {
+            _error = error;
+        }
+
+        public static Config GetConfig()
+        {
+            return _config;
+        }
+
         public static bool StartProcess()
         {
             try
             {
-                _config = GetConfig();
+                _config = LoadConfig();
+                if (_config == null)
+                {
+                    _error = $"{DateTime.Now.ToString("yyyyMMdd hh:mm:ss")} No config file found";
+                }
             }
             catch (Exception ex)
             {
-                // Use the defaults then
-                _config = new Config()
-                {
-                    RegionCodes = new List<string>() { "FA", "FY", "FB", "FV", "FQ", "FD", "FX" },
-                    AlertLevelRegional = 3,
-                    AlertLevelInbound = 3,
-                    AlertLevelOutbound = 3,
-                    AlertLevelGrow = 3,
-                    RegionName = "VATSSA",
-                    RegionCenterPoint = new double[] { -26.051257, 24.781342 },
-                    RegionRadius = 1680d
-                };
+                //// Use the defaults then
+                //_config = new Config()
+                //{
+                //    RegionCodes = new List<string>() { "FA", "FY", "FB", "FV", "FQ", "FD", "FX" },
+                //    AlertLevelRegional = 3,
+                //    AlertLevelInbound = 3,
+                //    AlertLevelOutbound = 3,
+                //    AlertLevelGrow = 3,
+                //    RegionName = "VATSSA",
+                //    RegionCenterPoint = new double[] { -26.051257, 24.781342 },
+                //    RegionRadius = 1680d
+                //};
+                _error = $"{DateTime.Now.ToString("yyyyMMdd hh:mm:ss")} - {ex.Message} - {ex.InnerException}";
+                return false;
             }
             _centerPoint = new GeoCoordinate(_config.RegionCenterPoint[0], _config.RegionCenterPoint[1]);
             DataStore.Initialize();
@@ -117,7 +142,8 @@ namespace VatsimTrafficNotify.Process
         {
             try
             {
-                _config = GetConfig();
+                _config = LoadConfig();
+                _centerPoint = new GeoCoordinate(_config.RegionCenterPoint[0], _config.RegionCenterPoint[1]);
             }
             catch (Exception ex)
             {
@@ -215,7 +241,7 @@ namespace VatsimTrafficNotify.Process
         {
             _running = true;
 
-            TelegramHelper.SendMessage("Starting Traffic Alert monitoring");
+            TelegramHelper.SendMessage("Starting Traffic Alert monitoring", _config);
             
             while (_running)
             {
@@ -275,7 +301,7 @@ namespace VatsimTrafficNotify.Process
                             _regionalAlert.FirstArrivalTimespan = firstArrivalString;
                             _regionalAlert.FirstArrivalLocation = firstTimespan.ArrivalAirport;
                             _regionalAlert.Planes = regionalFlights.ToList();
-                            Helpers.TelegramHelper.SendUpdate(_regionalAlert, true);
+                            Helpers.TelegramHelper.SendUpdate(_regionalAlert, _config, true);
                         }
                     }
                     else
@@ -297,7 +323,7 @@ namespace VatsimTrafficNotify.Process
                                 FirstArrivalLocation = firstTimespan.ArrivalAirport,
                                 Planes = regionalFlights.ToList()
                             };
-                            Helpers.TelegramHelper.SendUpdate(_regionalAlert);
+                            Helpers.TelegramHelper.SendUpdate(_regionalAlert, _config);
                         }
                     }
 
@@ -320,7 +346,7 @@ namespace VatsimTrafficNotify.Process
                             _inboundAlert.FirstArrivalTimespan = firstArrivalString;
                             _inboundAlert.FirstArrivalLocation = firstTimespan.ArrivalAirport;
                             _inboundAlert.Planes = inboundFlights.ToList();
-                            Helpers.TelegramHelper.SendUpdate(_inboundAlert, true);
+                            Helpers.TelegramHelper.SendUpdate(_inboundAlert, _config, true);
                         }
                     }
                     else
@@ -342,7 +368,7 @@ namespace VatsimTrafficNotify.Process
                                 FirstArrivalLocation = firstTimespan.ArrivalAirport,
                                 Planes = inboundFlights.ToList()
                             };
-                            Helpers.TelegramHelper.SendUpdate(_inboundAlert);
+                            Helpers.TelegramHelper.SendUpdate(_inboundAlert, _config);
                         }
                     }
 
@@ -363,7 +389,7 @@ namespace VatsimTrafficNotify.Process
                             _outboundAlert.Update = true;
                             _outboundAlert.OutboundAirport = GetOutboundAirport(outboundFlights);
                             _outboundAlert.Planes = outboundFlights.ToList();
-                            Helpers.TelegramHelper.SendUpdate(_outboundAlert, true);
+                            Helpers.TelegramHelper.SendUpdate(_outboundAlert, _config, true);
                         }
                     }
                     else
@@ -383,7 +409,7 @@ namespace VatsimTrafficNotify.Process
                                 OutboundAirport = GetOutboundAirport(outboundFlights),
                                 Planes = outboundFlights.ToList()
                             };
-                            Helpers.TelegramHelper.SendUpdate(_outboundAlert);
+                            Helpers.TelegramHelper.SendUpdate(_outboundAlert, _config);
                         }
                     }
 
@@ -400,7 +426,7 @@ namespace VatsimTrafficNotify.Process
                             _highTrafficAlert = null;
                         }
                         else if (highTrafficList.Any() &&
-                            highTrafficList.First().Count > 2)
+                            highTrafficList.First().Count > _highTrafficAlert.BusyAirports.First().Count + _config.AlertLevelGrow)
                         {
                             _highTrafficAlert.Update = true;
                             _highTrafficAlert.OutboundAirport = GetOutboundAirport(outboundFlights);
@@ -410,7 +436,7 @@ namespace VatsimTrafficNotify.Process
                                 Icao = htl.Item,
                                 Count = htl.Count
                             }).ToList();
-                            Helpers.TelegramHelper.SendUpdate(_highTrafficAlert, true);
+                            Helpers.TelegramHelper.SendUpdate(_highTrafficAlert, _config, true);
                         }
                     }
                     else
@@ -432,13 +458,14 @@ namespace VatsimTrafficNotify.Process
                                     Count = htl.Count
                                 }).ToList()
                         };
-                            Helpers.TelegramHelper.SendUpdate(_highTrafficAlert);
+                            Helpers.TelegramHelper.SendUpdate(_highTrafficAlert, _config);
                         }
                     }
 
                 }
                 catch (Exception ex)
                 {
+                    _error = $"{DateTime.Now.ToString("yyyyMMdd hh:mm:ss")} - {ex.Message} - {ex.InnerException}";
                 }
                 Thread.Sleep(10000);
             }

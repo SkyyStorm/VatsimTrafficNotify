@@ -3,56 +3,72 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using Telegram.Bot;
+using VatsimTrafficNotify.Models;
 using VatsimTrafficNotify.Process;
 
 namespace VatsimTrafficNotify.Helpers
 {
     public class TelegramHelper
     {
-        private static string _api = "5240174442:AAEUgtv1MlDQjSrBnHq3BpB-_IsuM-DCK9E";
-        public static void SendUpdate(TrafficAlert alert, bool isGrow = false)
+        public static void SendUpdate(TrafficAlert alert, Config config, bool isGrow = false)
         {
-            //return;
-            var bot = new TelegramBotClient(_api);
-            var message = string.Empty;
-            var growString = isGrow ? $"{alert.Alert} Traffic Update" : $"{alert.Alert} Traffic Alert";
-
-            switch (alert.Alert)
+            try
             {
-                case "Inbound":
-                case "Regional":
-                    var timeSpan = alert.FirstArrivalTimespan.Split(':');
-                    var hourStr = int.Parse(timeSpan[0]) != 1 ? "hours" : "hour";
-                    var minuteStr = int.Parse(timeSpan[1]) != 1 ? "minutes" : "minute";
+                var bot = new TelegramBotClient(config.TelegramApi);
+                var message = string.Empty;
+                var growString = isGrow ? $"{alert.Alert} Traffic Update" : $"{alert.Alert} Traffic Alert";
 
-                    message = $"<b>{growString}</b>{Environment.NewLine}" +
-                        $"Aircraft Count: {alert.AircraftCount}{Environment.NewLine}" +
-                        $"<i>First arrival at {alert.FirstArrivalLocation} in about {int.Parse(timeSpan[0])} {hourStr} and {int.Parse(timeSpan[1])} {minuteStr}. (Arriving at {alert.FirstArrivalTime}z)</i>";
-                    break;
-                case "Outbound":
-                    message = $"<b>{growString}</b>{Environment.NewLine}" +
-                  $"Aircraft Count: {alert.AircraftCount}{Environment.NewLine}" +
-                  $"<i>Most aircraft are departing from {alert.OutboundAirport}</i>";
-                    break;
-                case "High":
-                    var busyList = string.Empty;
-                    alert.BusyAirports.ForEach(ba =>
-                    {
-                        busyList += $"{ba.Icao}({ba.Count})";
-                    });
-                    message = $"<b>{growString}</b>{Environment.NewLine}" +
-                        $"At {alert.AircraftCount} airport(s){Environment.NewLine}" +
-                        $"<i>{busyList}</i>";
-                    break;
+                switch (alert.Alert)
+                {
+                    case "Inbound":
+                    case "Regional":
+                        var timeSpan = alert.FirstArrivalTimespan.Split(':');
+                        var hourStr = int.Parse(timeSpan[0]) != 1 ? "hours" : "hour";
+                        var minuteStr = int.Parse(timeSpan[1]) != 1 ? "minutes" : "minute";
+
+                        message = $"<b>{growString}</b>{Environment.NewLine}" +
+                            $"Aircraft Count: {alert.AircraftCount}{Environment.NewLine}" +
+                            $"<i>First arrival at {alert.FirstArrivalLocation} in about {int.Parse(timeSpan[0])} {hourStr} and {int.Parse(timeSpan[1])} {minuteStr}. (Arriving at {alert.FirstArrivalTime}z)</i>";
+                        break;
+                    case "Outbound":
+                        message = $"<b>{growString}</b>{Environment.NewLine}" +
+                      $"Aircraft Count: {alert.AircraftCount}{Environment.NewLine}" +
+                      $"<i>Most aircraft are departing from {alert.OutboundAirport}</i>";
+                        break;
+                    case "High":
+                        var busyList = string.Empty;
+                        alert.BusyAirports.ForEach(ba =>
+                        {
+                            if (busyList != "")
+                            {
+                                busyList += ",";
+                            }
+                            busyList += $"{ba.Icao}({ba.Count})";
+                        });
+                        message = $"<b>{growString}</b>{Environment.NewLine}" +
+                            $"At {alert.AircraftCount} airport(s){Environment.NewLine}" +
+                            $"<i>{busyList}</i>";
+                        break;
+                }
+
+                var result = bot.SendTextMessageAsync(config.TelegramGroupId, message, Telegram.Bot.Types.Enums.ParseMode.Html).Result;
             }
-
-            var result = bot.SendTextMessageAsync(-1001754702232, message,Telegram.Bot.Types.Enums.ParseMode.Html).Result;            
+            catch (Exception ex)
+            {
+                TrafficNotify.SetError($"{DateTime.Now.ToString("yyyyMMdd hh:mm:ss")} - {ex.Message} - {ex.InnerException}");
+            }
         }
 
-        public static void SendMessage(string message)
+        public static void SendMessage(string message,Config config)
         {
-            var bot = new TelegramBotClient(_api);
-            var result = bot.SendTextMessageAsync(-1001754702232, message).Result;
+            try { 
+            var bot = new TelegramBotClient(config.TelegramApi);
+            var result = bot.SendTextMessageAsync(config.TelegramGroupId, message).Result;
+            }
+            catch (Exception ex)
+            {
+                TrafficNotify.SetError($"{DateTime.Now.ToString("yyyyMMdd hh:mm:ss")} - {ex.Message} - {ex.InnerException}");
+            }
 
         }
     }

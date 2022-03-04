@@ -209,7 +209,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="airports_new.dat" />
-    <Content Include="config.json" />
+    <None Include="config.json.example" />
     <None Include="packages.config" />
   </ItemGroup>
   <PropertyGroup>

@@ -1,0 +1,13 @@
+{
+   "regionName": "VATUS",
+  "regionCodes": [ "FA", "FY", "FB", "FV", "FQ", "FD", "FX" ],
+  "regionCenterPoint": [ -26.051257, 24.781342 ],
+  "regionRadius": 1680,
+  "alertLevelRegional": 3,
+  "alertLevelInbound": 3,
+  "alertLevelOutbound": 3,
+  "alertLevelGrow": 3,
+  "telegramGroupId": -740068488792,
+  "telegramApi": "43534534567:AH52ssgHHFDsedf2434-_SDFSD-gjolfd",
+  "password": "Anypasswordhereforrestartsandotherfunctions"
+}

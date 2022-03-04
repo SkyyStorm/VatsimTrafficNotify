@@ -17,7 +17,10 @@
   <div class="container">
     <div class="columns is-centered mt-5">
       <div class="column is-half">
-        <h2 class="title has-text-info">Vatsim Traffic Alert - <span id="lblTitle"></span></h2><a id="btnConfig" class="button is-small">Reload Config</a>
+        <a id="btnConfig" class="button is-small">Reload Config</a> <a id="btnRestart" class="button is-small">Restart</a>
+        <input class="input is-small" type="text" id="txtPassword" style="width: 100px;" />
+        <h2 class="title has-text-info">Vatsim Traffic Alert - <span id="lblTitle"></span></h2>
+        <p id="error"></p>
       </div>
     </div>
       <div class="columns is-centered mt-5">
@@ -41,6 +44,10 @@
     document.getElementById('btnConfig').addEventListener('click', () => {
       updateConfig();
     });
+    document.getElementById('btnRestart').addEventListener('click', () => {
+      const password = document.getElementById('txtPassword').value;
+      restartService(password);
+    });
   });
 
 
@@ -55,6 +62,7 @@
       .then(data => {
         l = data;
         let mainStr = '';
+        document.getElementById("error").innerHTML = data.d.Error;
         data.d.Alerts.forEach((item, index) => {
           if (item != null) {
             if (item.Alert === 'Inbound' || item.Alert === 'Regional') {
@@ -169,7 +177,18 @@
           'Content-Type': 'application/json'
         }       
       });
-    }
+  }
+
+  function restartService(password) {
+    fetch(
+      `${uri}/RestartService`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ password: password })
+    });
+  }
   
   
 </script>
