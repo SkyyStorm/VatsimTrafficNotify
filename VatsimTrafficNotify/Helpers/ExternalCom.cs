@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Discord;
+using Discord.WebSocket;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
@@ -8,8 +10,10 @@ using VatsimTrafficNotify.Process;
 
 namespace VatsimTrafficNotify.Helpers
 {
-    public class TelegramHelper
+    public class ExternalComHelper
     {
+        public static DiscordSocketClient _discordClient = null;       
+        
         public static void SendUpdate(TrafficAlert alert, Config config, bool isGrow = false)
         {
             try
@@ -49,9 +53,11 @@ namespace VatsimTrafficNotify.Helpers
                             $"At {alert.AircraftCount} airport(s){Environment.NewLine}" +
                             $"<i>{busyList}</i>";
                         break;
-                }
-
-                var result = bot.SendTextMessageAsync(config.TelegramGroupId, message, Telegram.Bot.Types.Enums.ParseMode.Html).Result;
+                }           
+                if (config.NotifyTelegram)
+                    SendViaTelegram(message, config);
+                if (config.NotifyDiscord)
+                    SendViaDiscord(message, config);
             }
             catch (Exception ex)
             {
@@ -61,15 +67,61 @@ namespace VatsimTrafficNotify.Helpers
 
         public static void SendMessage(string message,Config config)
         {
-            try { 
-            var bot = new TelegramBotClient(config.TelegramApi);
-            var result = bot.SendTextMessageAsync(config.TelegramGroupId, message).Result;
+            try 
+            {
+                if (config.NotifyTelegram)
+                    SendViaTelegram(message, config);
+                if (config.NotifyDiscord)
+                    SendViaDiscord(message, config);
             }
             catch (Exception ex)
             {
                 TrafficNotify.SetError($"{DateTime.Now.ToString("yyyyMMdd hh:mm:ss")} - {ex.Message} - {ex.InnerException}");
             }
 
+        }
+
+        public static void SendViaTelegram(string message, Config config)
+        {
+            var bot = new TelegramBotClient(config.TelegramApi);
+            var result = bot.SendTextMessageAsync(config.TelegramGroupId, message, Telegram.Bot.Types.Enums.ParseMode.Html).Result;
+        }
+
+        public static async void SendViaDiscord(string message, Config config)
+        {
+            if (_discordClient == null)
+            {
+                SetupDiscord(config);
+            }
+            SocketChannel channel = _discordClient.GetChannel(config.DiscordChannel);
+            await (channel as IMessageChannel).SendMessageAsync(message);
+        }
+
+        public static async void SetupDiscord(Config config)
+        {
+            if (_discordClient != null)
+            {
+                await _discordClient.StopAsync();
+            }
+            _discordClient = new DiscordSocketClient();
+            await _discordClient.LoginAsync(TokenType.Bot, config.DiscordToken);
+            await _discordClient.StartAsync();
+            await _discordClient.SetStatusAsync(UserStatus.Online);
+            await _discordClient.SetGameAsync("Vatsim");
+        }
+
+        public static async void StopDiscord()
+        {
+            if (_discordClient == null)
+            {
+                return;
+            }
+            await _discordClient.StopAsync();
+        }
+
+        public static async void UpdateDiscord(int planes, Config config)
+        {
+            await _discordClient.SetGameAsync($"Vatsim - {planes} aicraft in {config.RegionName}");
         }
     }
 }

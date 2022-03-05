@@ -133,9 +133,15 @@ namespace VatsimTrafficNotify.Process
             }
             _centerPoint = new GeoCoordinate(_config.RegionCenterPoint[0], _config.RegionCenterPoint[1]);
             DataStore.Initialize();
+            ExternalComHelper.SetupDiscord(_config);
             _thread = new Thread(() => Run());
             _thread.Start();
             return true;
+        }
+
+        public static void StopProcess()
+        {
+            ExternalComHelper.StopDiscord();
         }
 
         public static void UpdateConfig()
@@ -241,7 +247,7 @@ namespace VatsimTrafficNotify.Process
         {
             _running = true;
 
-            TelegramHelper.SendMessage("Starting Traffic Alert monitoring", _config);
+            ExternalComHelper.SendMessage("Started Traffic Alert monitoring", _config);
             
             while (_running)
             {
@@ -269,6 +275,9 @@ namespace VatsimTrafficNotify.Process
 
                     var processedOutbound = CheckPilotDistances(outboundFlights);
                     var processedInbound = CheckPilotDistances(inboundFlights);
+
+                    var countOfPlanes = processedInbound.Count + processedInbound.Count;
+                    ExternalComHelper.UpdateDiscord(countOfPlanes, _config);
 
                     List<string> busyAirports = processedOutbound
                         .Select(at => at.flight_plan.departure).ToList();
@@ -301,7 +310,7 @@ namespace VatsimTrafficNotify.Process
                             _regionalAlert.FirstArrivalTimespan = firstArrivalString;
                             _regionalAlert.FirstArrivalLocation = firstTimespan.ArrivalAirport;
                             _regionalAlert.Planes = regionalFlights.ToList();
-                            Helpers.TelegramHelper.SendUpdate(_regionalAlert, _config, true);
+                            Helpers.ExternalComHelper.SendUpdate(_regionalAlert, _config, true);
                         }
                     }
                     else
@@ -323,7 +332,7 @@ namespace VatsimTrafficNotify.Process
                                 FirstArrivalLocation = firstTimespan.ArrivalAirport,
                                 Planes = regionalFlights.ToList()
                             };
-                            Helpers.TelegramHelper.SendUpdate(_regionalAlert, _config);
+                            Helpers.ExternalComHelper.SendUpdate(_regionalAlert, _config);
                         }
                     }
 
@@ -346,7 +355,7 @@ namespace VatsimTrafficNotify.Process
                             _inboundAlert.FirstArrivalTimespan = firstArrivalString;
                             _inboundAlert.FirstArrivalLocation = firstTimespan.ArrivalAirport;
                             _inboundAlert.Planes = inboundFlights.ToList();
-                            Helpers.TelegramHelper.SendUpdate(_inboundAlert, _config, true);
+                            Helpers.ExternalComHelper.SendUpdate(_inboundAlert, _config, true);
                         }
                     }
                     else
@@ -368,7 +377,7 @@ namespace VatsimTrafficNotify.Process
                                 FirstArrivalLocation = firstTimespan.ArrivalAirport,
                                 Planes = inboundFlights.ToList()
                             };
-                            Helpers.TelegramHelper.SendUpdate(_inboundAlert, _config);
+                            Helpers.ExternalComHelper.SendUpdate(_inboundAlert, _config);
                         }
                     }
 
@@ -389,7 +398,7 @@ namespace VatsimTrafficNotify.Process
                             _outboundAlert.Update = true;
                             _outboundAlert.OutboundAirport = GetOutboundAirport(outboundFlights);
                             _outboundAlert.Planes = outboundFlights.ToList();
-                            Helpers.TelegramHelper.SendUpdate(_outboundAlert, _config, true);
+                            Helpers.ExternalComHelper.SendUpdate(_outboundAlert, _config, true);
                         }
                     }
                     else
@@ -409,7 +418,7 @@ namespace VatsimTrafficNotify.Process
                                 OutboundAirport = GetOutboundAirport(outboundFlights),
                                 Planes = outboundFlights.ToList()
                             };
-                            Helpers.TelegramHelper.SendUpdate(_outboundAlert, _config);
+                            Helpers.ExternalComHelper.SendUpdate(_outboundAlert, _config);
                         }
                     }
 
@@ -436,7 +445,7 @@ namespace VatsimTrafficNotify.Process
                                 Icao = htl.Item,
                                 Count = htl.Count
                             }).ToList();
-                            Helpers.TelegramHelper.SendUpdate(_highTrafficAlert, _config, true);
+                            Helpers.ExternalComHelper.SendUpdate(_highTrafficAlert, _config, true);
                         }
                     }
                     else
@@ -458,7 +467,7 @@ namespace VatsimTrafficNotify.Process
                                     Count = htl.Count
                                 }).ToList()
                         };
-                            Helpers.TelegramHelper.SendUpdate(_highTrafficAlert, _config);
+                            Helpers.ExternalComHelper.SendUpdate(_highTrafficAlert, _config);
                         }
                     }
 

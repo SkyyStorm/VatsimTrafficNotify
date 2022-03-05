@@ -19,5 +19,10 @@ namespace VatsimTrafficNotify
             BundleConfig.RegisterBundles(BundleTable.Bundles);
             TrafficNotify.StartProcess();
         }
+
+        protected void Application_Stop()
+        {
+            TrafficNotify.StopProcess();
+        }
     }
 }

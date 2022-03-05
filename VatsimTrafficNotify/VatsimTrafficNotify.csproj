@@ -48,6 +48,24 @@
     <Reference Include="Boerman.OpenAip, Version=1.1.2.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Boerman.OpenAip.1.1.2\lib\netstandard2.0\Boerman.OpenAip.dll</HintPath>
     </Reference>
+    <Reference Include="Discord.Net.Commands, Version=3.4.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Discord.Net.Commands.3.4.0\lib\net461\Discord.Net.Commands.dll</HintPath>
+    </Reference>
+    <Reference Include="Discord.Net.Core, Version=3.4.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Discord.Net.Core.3.4.0\lib\net461\Discord.Net.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Discord.Net.Interactions, Version=3.4.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Discord.Net.Interactions.3.4.0\lib\net461\Discord.Net.Interactions.dll</HintPath>
+    </Reference>
+    <Reference Include="Discord.Net.Rest, Version=3.4.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Discord.Net.Rest.3.4.0\lib\net461\Discord.Net.Rest.dll</HintPath>
+    </Reference>
+    <Reference Include="Discord.Net.Webhook, Version=3.4.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Discord.Net.Webhook.3.4.0\lib\netstandard2.0\Discord.Net.Webhook.dll</HintPath>
+    </Reference>
+    <Reference Include="Discord.Net.WebSocket, Version=3.4.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Discord.Net.WebSocket.3.4.0\lib\net461\Discord.Net.WebSocket.dll</HintPath>
+    </Reference>
     <Reference Include="GeoAPI, Version=1.7.5.0, Culture=neutral, PublicKeyToken=a1a0da7def465678, processorArchitecture=MSIL">
       <HintPath>..\packages\GeoAPI.Core.1.7.5\lib\net45\GeoAPI.dll</HintPath>
     </Reference>
@@ -58,11 +76,17 @@
       <HintPath>..\packages\Microsoft.Bcl.AsyncInterfaces.5.0.0\lib\net461\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Microsoft.Extensions.DependencyInjection.Abstractions, Version=5.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.DependencyInjection.Abstractions.5.0.0\lib\net461\Microsoft.Extensions.DependencyInjection.Abstractions.dll</HintPath>
+    </Reference>
     <Reference Include="NetTopologySuite, Version=1.15.1.0, Culture=neutral, PublicKeyToken=f580a05016ebada1, processorArchitecture=MSIL">
       <HintPath>..\packages\NetTopologySuite.Core.1.15.1\lib\net45\NetTopologySuite.dll</HintPath>
     </Reference>
     <Reference Include="NetTopologySuite.CoordinateSystems, Version=1.15.1.0, Culture=neutral, PublicKeyToken=f580a05016ebada1, processorArchitecture=MSIL">
       <HintPath>..\packages\NetTopologySuite.CoordinateSystems.1.15.1\lib\net45\NetTopologySuite.CoordinateSystems.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.13.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="RestSharp, Version=107.3.0.0, Culture=neutral, PublicKeyToken=598062e77f915f75, processorArchitecture=MSIL">
       <HintPath>..\packages\RestSharp.107.3.0\lib\netstandard2.0\RestSharp.dll</HintPath>
@@ -71,15 +95,27 @@
     <Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll</HintPath>
     </Reference>
+    <Reference Include="System.Collections.Immutable, Version=5.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Collections.Immutable.5.0.0\lib\net461\System.Collections.Immutable.dll</HintPath>
+    </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System.Device" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Interactive.Async, Version=5.0.0.0, Culture=neutral, PublicKeyToken=94bc3704cddfc263, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Interactive.Async.5.0.0\lib\net461\System.Interactive.Async.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Linq.Async, Version=5.0.0.0, Culture=neutral, PublicKeyToken=94bc3704cddfc263, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Linq.Async.5.0.0\lib\net461\System.Linq.Async.dll</HintPath>
+    </Reference>
     <Reference Include="System.Memory, Version=4.0.1.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Memory.4.5.4\lib\net461\System.Memory.dll</HintPath>
     </Reference>
     <Reference Include="System.Numerics" />
     <Reference Include="System.Numerics.Vectors, Version=4.1.4.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive, Version=5.0.0.0, Culture=neutral, PublicKeyToken=94bc3704cddfc263, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Reactive.5.0.0\lib\net472\System.Reactive.dll</HintPath>
     </Reference>
     <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=5.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.5.0.0\lib\net45\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
@@ -102,6 +138,8 @@
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Windows" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Web" />
     <Reference Include="System.Web.Extensions" />
@@ -146,9 +184,6 @@
       <Private>True</Private>
       <HintPath>..\packages\Microsoft.AspNet.WebPages.3.2.7\lib\net45\System.Web.WebPages.Razor.dll</HintPath>
     </Reference>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>..\packages\Newtonsoft.Json.12.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
-    </Reference>
     <Reference Include="Telegram.Bot, Version=17.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Telegram.Bot.17.0.0\lib\netstandard2.0\Telegram.Bot.dll</HintPath>
     </Reference>
@@ -160,6 +195,7 @@
       <Private>True</Private>
       <HintPath>..\packages\Antlr.3.5.0.2\lib\Antlr3.Runtime.dll</HintPath>
     </Reference>
+    <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CodeDom.Providers.DotNetCompilerPlatform">
@@ -174,7 +210,7 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Helpers\Communication.cs" />
-    <Compile Include="Helpers\Telegram.cs" />
+    <Compile Include="Helpers\ExternalCom.cs" />
     <Compile Include="MainService.asmx.cs">
       <DependentUpon>MainService.asmx</DependentUpon>
       <SubType>Component</SubType>
