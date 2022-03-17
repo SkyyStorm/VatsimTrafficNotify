@@ -14,7 +14,9 @@
   "notifyTelegram": false,
   "telegramGroupId": -123456789789,
   "telegramApi": "TELEGRAMTOKEN",
+  "telegramSendDebug":  false,
   "notifyDiscord": false,
   "discordToken": "DISCORDTOKEN",
-  "discordChannel": 1234567890123
+  "discordChannel": 1234567890123  
+
 }

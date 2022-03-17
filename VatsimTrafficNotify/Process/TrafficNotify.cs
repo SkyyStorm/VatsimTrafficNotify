@@ -46,7 +46,7 @@ namespace VatsimTrafficNotify.Process
         
         public List<Pilot> Outbounds { get; set; }
         public List<Pilot> Inbounds { get; set; }
-        public List<Pilot> Regionals { get; set; }
+        public List<Pilot> Regionals { get; set; }        
     }
 
     public class TrafficNotify
@@ -65,6 +65,10 @@ namespace VatsimTrafficNotify.Process
         private static Thread _thread;
         private static double _toNM = 0.000539957d;
         private static string _error = "";
+        private static int _trafficFAOR = 0;
+        private static int _trafficFACT = 0;
+        private static int _trafficFALE = 0;
+        private static string _lastLog = "";
 
         public static object GetAlerts()
         {
@@ -77,7 +81,8 @@ namespace VatsimTrafficNotify.Process
                     _airportTrafficAlert                   
                 },
                 Regions = _config.RegionCodes,
-                Error = _error
+                Error = _error,
+                LastLog = _lastLog
             };
         }
 
@@ -263,7 +268,10 @@ namespace VatsimTrafficNotify.Process
         {
             _running = true;
 
-            ExternalComHelper.SendMessage("Restarted monitoring (v0.9)", _config);
+            if (_config.TelegramSendDebug)
+            {
+                ExternalComHelper.SendMessage("Restarted monitoring (v0.9)", _config);
+            }
             
             while (_running)
             {
@@ -425,217 +433,35 @@ namespace VatsimTrafficNotify.Process
                         ExternalComHelper.UpdateDiscord(allPlanesInRange.Count(), _config);
                     }
 
+                    try
+                    {
+                        var curDir = AppDomain.CurrentDomain.BaseDirectory;
+                        if (!Directory.Exists(Path.Combine(curDir, "logs")))
+                        {
+                            Directory.CreateDirectory(Path.Combine(curDir, "logs"));
+                        }
+                        using (var sr = new StreamWriter($"{Path.Combine(curDir, "logs", $"stats{DateTime.Today:ddMMyyyy}.csv")}", true))
+                        {
+                            // Time, Flights in Region, FAOR tfc, FACT tfc, FALE tfc, Inbounds, Outbounds, Regional
+                            var time = DateTime.Now.ToString("hh:mm:ss");
+                            var flightsInRegion = allPlanesInRange.Count();
+                            int localOutboundCount = allPlanesInRange
+                                .Where(p => _config.RegionCodes.Any(c => c == p.flight_plan.departure.ToUpper().Substring(0, 2))
+                                && !_config.RegionCodes.Any(c => c == p.flight_plan.arrival.ToUpper().Substring(0, 2))).ToList().Count();
 
-                    //var regionalFlights = vatsimData.pilots
-                    //    .Where(p => _config.RegionCodes.Any(c => c == p.flight_plan.departure.ToUpper().Substring(0, 2))
-                    //    && _config.RegionCodes.Any(c => c == p.flight_plan.arrival.ToUpper().Substring(0, 2)));
-
-                    //var outboundFlights = vatsimData.pilots
-                    //    .Where(p => _config.RegionCodes.Any(c => c == p.flight_plan.departure.ToUpper().Substring(0, 2))
-                    //    && !_config.RegionCodes.Any(c => c == p.flight_plan.arrival.ToUpper().Substring(0, 2)));
-
-                    //var inboundFlights = vatsimData.pilots
-                    //    .Where(p => !_config.RegionCodes.Any(c => c == p.flight_plan.departure.ToUpper().Substring(0, 2))
-                    //    && _config.RegionCodes.Any(c => c == p.flight_plan.arrival.ToUpper().Substring(0, 2)));                            
-
-                    //var processedOutbound = CheckPilotDistances(outboundFlights);
-                    //var processedInbound = CheckPilotDistances(inboundFlights);
-
-                    //var countOfPlanes = processedInbound.Count + processedInbound.Count;
-                    //ExternalComHelper.UpdateDiscord(countOfPlanes, _config);
-
-                    //List<string> busyAirports = processedOutbound
-                    //    .Select(at => at.flight_plan.departure).ToList();
-                    //busyAirports = busyAirports.Concat(processedInbound
-                    //    .Select(at => at.flight_plan.arrival).ToList()).ToList();
-                    //// Now with a List<string> of all arrival and departure airports at their counts
-                    //// Calculate the count for each one
-                    //var busyAirportsProcessed = busyAirports.GroupBy(ba => ba)
-                    //    .Select(itemGroup => new { Item = itemGroup.Key, Count = itemGroup.Count() }).OrderByDescending(bap => bap.Count);
-                    //var highTrafficList = busyAirportsProcessed.Where(bap => bap.Count > _config.AlertLevelGrow);
-                    //// Make above a class so that you can add it to the TrafficAlert class
-
-
-                    //// Regional Traffic
-                    //regionalFlights = CheckPilotDistances(regionalFlights);
-                    //if (_regionalAlert != null)
-                    //{
-                    //    if (regionalFlights.Count() < _config.AlertLevelRegional - 1)
-                    //    {
-                    //        _regionalAlert = null;
-                    //    }
-                    //    else if (regionalFlights.Count() > _regionalAlert.AircraftCount + _config.AlertLevelGrow)
-                    //    {
-                    //        var firstTimespan = CalculateFirstArrivalTime(regionalFlights);
-                    //        var firstArrival = DateTime.UtcNow.Add(firstTimespan.ArrivalTime);
-                    //        var firstArrivalString = firstTimespan.ArrivalTime.ToString(@"hh\:mm");
-                    //        _regionalAlert.AircraftCount = regionalFlights.Count();
-                    //        _regionalAlert.Update = true;
-                    //        _regionalAlert.FirstArrivalTime = firstArrival.ToString("HH:mm");
-                    //        _regionalAlert.FirstArrivalTimespan = firstArrivalString;
-                    //        _regionalAlert.FirstArrivalLocation = firstTimespan.ArrivalAirport;
-                    //        _regionalAlert.Planes = regionalFlights.ToList();
-                    //        Helpers.ExternalComHelper.SendUpdate(_regionalAlert, _config, true);
-                    //    }
-                    //}
-                    //else
-                    //{
-                    //    if (regionalFlights.Count() > _config.AlertLevelRegional)
-                    //    {
-                    //        var firstTimespan = CalculateFirstArrivalTime(regionalFlights);
-                    //        var firstArrival = DateTime.UtcNow.Add(firstTimespan.ArrivalTime);
-                    //        var firstArrivalString = firstTimespan.ArrivalTime.ToString(@"hh\:mm");
-                    //        _regionalAlert = new TrafficAlert()
-                    //        {
-                    //            Message = "Traffic is increasing in region.",
-                    //            AircraftCount = regionalFlights.Count(),
-                    //            Alert = AlertType.Regional.ToString(),
-                    //            Timestamp = DateTime.Now,
-                    //            Update = true,
-                    //            FirstArrivalTime = firstArrival.ToString("HH:mm"),
-                    //            FirstArrivalTimespan = firstArrivalString,
-                    //            FirstArrivalLocation = firstTimespan.ArrivalAirport,
-                    //            Planes = regionalFlights.ToList()
-                    //        };
-                    //        Helpers.ExternalComHelper.SendUpdate(_regionalAlert, _config);
-                    //    }
-                    //}
-
-                    //// Inbound Traffic
-                    //inboundFlights = CheckPilotDistances(inboundFlights);
-                    //if (_inboundAlert != null)
-                    //{
-                    //    if (inboundFlights.Count() < _config.AlertLevelInbound - 1)
-                    //    {
-                    //        _inboundAlert = null;
-                    //    }
-                    //    else if (inboundFlights.Count() > _inboundAlert.AircraftCount + _config.AlertLevelGrow)
-                    //    {
-                    //        var firstTimespan = CalculateFirstArrivalTime(inboundFlights);
-                    //        var firstArrival = DateTime.UtcNow.Add(firstTimespan.ArrivalTime);
-                    //        var firstArrivalString = firstTimespan.ArrivalTime.ToString(@"hh\:mm");
-                    //        _inboundAlert.AircraftCount = inboundFlights.Count();
-                    //        _inboundAlert.Update = true;
-                    //        _inboundAlert.FirstArrivalTime = firstArrival.ToString("HH:mm");
-                    //        _inboundAlert.FirstArrivalTimespan = firstArrivalString;
-                    //        _inboundAlert.FirstArrivalLocation = firstTimespan.ArrivalAirport;
-                    //        _inboundAlert.Planes = inboundFlights.ToList();
-                    //        Helpers.ExternalComHelper.SendUpdate(_inboundAlert, _config, true);
-                    //    }
-                    //}
-                    //else
-                    //{
-                    //    if (inboundFlights.Count() > _config.AlertLevelInbound)
-                    //    {
-                    //        var firstTimespan = CalculateFirstArrivalTime(inboundFlights);
-                    //        var firstArrival = DateTime.UtcNow.Add(firstTimespan.ArrivalTime);
-                    //        var firstArrivalString = firstTimespan.ArrivalTime.ToString(@"hh\:mm");
-                    //        _inboundAlert = new TrafficAlert()
-                    //        {
-                    //            Message = "Traffic is increasing in region.",
-                    //            AircraftCount = inboundFlights.Count(),
-                    //            Alert = AlertType.Inbound.ToString(),
-                    //            Timestamp = DateTime.Now,
-                    //            Update = true,
-                    //            FirstArrivalTime = firstArrival.ToString("HH:mm"),
-                    //            FirstArrivalTimespan = firstArrivalString,
-                    //            FirstArrivalLocation = firstTimespan.ArrivalAirport,
-                    //            Planes = inboundFlights.ToList()
-                    //        };
-                    //        Helpers.ExternalComHelper.SendUpdate(_inboundAlert, _config);
-                    //    }
-                    //}
-
-                    //// Outbound Traffic
-                    //outboundFlights = CheckPilotDistances(outboundFlights);
-                    //if (_outboundAlert != null)
-                    //{
-                    //    if (outboundFlights.Count() < _config.AlertLevelOutbound - 1)
-                    //    {
-                    //        _outboundAlert = null;
-                    //    }
-                    //    else if (outboundFlights.Count() > _outboundAlert.AircraftCount + _config.AlertLevelGrow)
-                    //    {
-                    //        var firstTimespan = CalculateFirstArrivalTime(outboundFlights);
-                    //        var firstArrival = DateTime.UtcNow.Add(firstTimespan.ArrivalTime);
-                    //        var firstArrivalString = firstTimespan.ArrivalTime.ToString(@"hh\:mm");
-                    //        _outboundAlert.AircraftCount = outboundFlights.Count();
-                    //        _outboundAlert.Update = true;
-                    //        _outboundAlert.OutboundAirport = GetOutboundAirport(outboundFlights);
-                    //        _outboundAlert.Planes = outboundFlights.ToList();
-                    //        Helpers.ExternalComHelper.SendUpdate(_outboundAlert, _config, true);
-                    //    }
-                    //}
-                    //else
-                    //{
-                    //    if (outboundFlights.Count() > _config.AlertLevelOutbound)
-                    //    {
-                    //        var firstTimespan = CalculateFirstArrivalTime(outboundFlights);
-                    //        var firstArrival = DateTime.UtcNow.Add(firstTimespan.ArrivalTime);
-                    //        var firstArrivalString = firstTimespan.ArrivalTime.ToString(@"hh\:mm");
-                    //        _outboundAlert = new TrafficAlert()
-                    //        {
-                    //            Message = "Traffic is increasing in region.",
-                    //            AircraftCount = outboundFlights.Count(),
-                    //            Alert = AlertType.Outbound.ToString(),
-                    //            Timestamp = DateTime.Now,
-                    //            Update = true,
-                    //            OutboundAirport = GetOutboundAirport(outboundFlights),
-                    //            Planes = outboundFlights.ToList()
-                    //        };
-                    //        Helpers.ExternalComHelper.SendUpdate(_outboundAlert, _config);
-                    //    }
-                    //}
-
-                    //// Airport Specific Inbound and Outbound
-                    //if (_highTrafficAlert != null)
-                    //{
-                    //    if (!highTrafficList.Any())
-                    //    {
-                    //        _highTrafficAlert = null;
-                    //    }
-                    //    else if (highTrafficList.Any() &&
-                    //        highTrafficList.First().Count < 1)
-                    //    {
-                    //        _highTrafficAlert = null;
-                    //    }
-                    //    else if (highTrafficList.Any() &&
-                    //        highTrafficList.First().Count > _highTrafficAlert.BusyAirports.First().Count + _config.AlertLevelGrow)
-                    //    {
-                    //        _highTrafficAlert.Update = true;
-                    //        _highTrafficAlert.OutboundAirport = GetOutboundAirport(outboundFlights);
-                    //        _highTrafficAlert.Planes = outboundFlights.ToList();
-                    //        _highTrafficAlert.BusyAirports = highTrafficList.Select(htl => new AirportInfo()
-                    //        {
-                    //            Icao = htl.Item,
-                    //            Count = htl.Count
-                    //        }).ToList();
-                    //        Helpers.ExternalComHelper.SendUpdate(_highTrafficAlert, _config, true);
-                    //    }
-                    //}
-                    //else
-                    //{
-                    //    if (highTrafficList.Count() > 0)
-                    //    {                            
-                    //        _highTrafficAlert = new TrafficAlert()
-                    //        {
-                    //            Message = "Traffic is increasing in region.",
-                    //            AircraftCount = highTrafficList.Count(),
-                    //            Alert = AlertType.High.ToString(),
-                    //            Timestamp = DateTime.Now,
-                    //            Update = true,
-                    //            OutboundAirport = null,
-                    //            Planes = null,
-                    //            BusyAirports = highTrafficList.Select(htl => new AirportInfo()
-                    //            {
-                    //                Icao = htl.Item,
-                    //                Count = htl.Count
-                    //            }).ToList()
-                    //    };
-                    //        Helpers.ExternalComHelper.SendUpdate(_highTrafficAlert, _config);
-                    //    }
-                    //}
-
+                            int localInboundCount = allPlanesInRange
+                                .Where(p => !_config.RegionCodes.Any(c => c == p.flight_plan.departure.ToUpper().Substring(0, 2))
+                                && _config.RegionCodes.Any(c => c == p.flight_plan.arrival.ToUpper().Substring(0, 2))).ToList().Count();
+                            int regional = allPlanesInRange.Count() - localInboundCount - localOutboundCount;
+                            var str = $"{time},{flightsInRegion},{_trafficFAOR},{_trafficFACT},{_trafficFALE},{localInboundCount},{localOutboundCount},{regional}";
+                            sr.WriteLine(str);
+                            _lastLog = str;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // WHYYY
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -696,7 +522,7 @@ namespace VatsimTrafficNotify.Process
                     .GetDistanceTo(airportLocation) * _toNM < 100
                     && (p.flight_plan.departure == airport.ICAO || p.flight_plan.arrival == airport.ICAO))
                     .ToList();
-               if (planesInRange.Count >= _config.AlertLevelAirport)
+                if (planesInRange.Count >= _config.AlertLevelAirport)
                 {
                     var localOutbounds = planesInRange
                         .Where(p => p.flight_plan.departure.ToUpper() == airport.ICAO).ToList();
@@ -711,6 +537,18 @@ namespace VatsimTrafficNotify.Process
                         InboundsCount = localInbounds.Count(),
                         OutboundsCount = localOutbounds.Count()
                     });
+                }
+                if (airport.ICAO == "FAOR")
+                {
+                    _trafficFAOR = planesInRange.Count();
+                }
+                if (airport.ICAO == "FALE")
+                {
+                    _trafficFALE = planesInRange.Count();
+                }
+                if (airport.ICAO == "FACT")
+                {
+                    _trafficFACT = planesInRange.Count();
                 }
             }
             return highTrafficList;

@@ -25,6 +25,7 @@ namespace VatsimTrafficNotify.Models
         public string Password { get; set; }
         public bool NotifyTelegram { get; set; }
         public bool NotifyDiscord { get; set; }
+        public bool TelegramSendDebug { get; set; }
 
     }
 }

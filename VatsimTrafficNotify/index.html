@@ -23,11 +23,16 @@
         <p id="error"></p>
       </div>
     </div>
-      <div class="columns is-centered mt-5">
-        <div id="colCards" class="column is-half box">
-        </div>
+    <div class="columns is-centered mt-5">
+      <div id="colCards" class="column is-half box">
       </div>
     </div>
+    <div class="columns is-centered mt-5">
+      <div id="colCards" class="column is-half box">
+        <span class="text is-large" id="lblLastLog"></span>
+      </div>
+    </div>
+  </div>
 </body>
 <script>
   var l = null;
@@ -61,6 +66,28 @@
       .then(response => response.json())
       .then(data => {
         l = data;
+
+        let log = data.d.LastLog.split(',');
+        if (log.length == 8) {
+          let str = `
+                                      <div class="tags has-addons mb-0 are-large"><span class="tag is-success">Region</span><span class="tag">${log[1]}</span></div>
+                                      <br />
+                                      <div class="columns">
+                                        <div class="column">
+                                          <div class="tags has-addons mb-0 are-medium"><span class="tag is-info">FAOR</span><span class="tag">${log[2]}</span></div>
+                                          <div class="tags has-addons mb-0 are-medium"><span class="tag is-info">FACT</span><span class="tag">${log[3]}</span></div>
+                                          <div class="tags has-addons mb-0 are-medium"><span class="tag is-info">FALE</span><span class="tag">${log[4]}</span></div>
+                                        </div>
+                                        <div class="column">
+                                          <div class="tags has-addons mb-0 are-medium"><span class="tag is-warning">Inbound</span><span class="tag">${log[5]}</span></div>
+                                          <div class="tags has-addons mb-0 are-medium"><span class="tag is-warning">Outbound</span><span class="tag">${log[6]}</span></div>
+                                          <div class="tags has-addons mb-0 are-medium"><span class="tag is-warning">Regional</span><span class="tag">${log[7]}</span></div>
+                                        </div>
+                                      </div>
+                                      <span class="is-size-6 has-text-grey">Last Update ${log[0]}`;
+          document.getElementById('lblLastLog').innerHTML = str;
+        }
+
         let mainStr = '';
         document.getElementById("error").innerHTML = data.d.Error;
         data.d.Alerts.forEach((item, index) => {
