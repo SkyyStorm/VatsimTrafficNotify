@@ -46,6 +46,7 @@ namespace VatsimTrafficNotify.Process
         
         public List<Pilot> Outbounds { get; set; }
         public List<Pilot> Inbounds { get; set; }
+        public List<Pilot> Regionals { get; set; }
     }
 
     public class TrafficNotify
@@ -262,7 +263,7 @@ namespace VatsimTrafficNotify.Process
         {
             _running = true;
 
-            ExternalComHelper.SendMessage("Restarted traffic monitoring", _config);
+            ExternalComHelper.SendMessage("Restarted monitoring (v0.9)", _config);
             
             while (_running)
             {
@@ -404,15 +405,15 @@ namespace VatsimTrafficNotify.Process
                     }
                     else
                     {
-                        if (groupFlights.Count() > 0)
+                        if (groupFlights.Where(gf => gf.Count > _config.AlertLevelGroupflight).Count() > 0)
                         {
                             _groupFlightTrafficAlert = new TrafficAlert()
                             {
                                 Message = "Groupflights detected.",
-                                AircraftCount = groupFlights.Count(),
+                                AircraftCount = groupFlights.Where(gf => gf.Count > _config.AlertLevelGroupflight).Count(),
                                 Alert = AlertType.GroupFlight.ToString(),
                                 Timestamp = DateTime.Now,
-                                BusyAirports = groupFlights,
+                                BusyAirports = groupFlights.Where(gf => gf.Count > _config.AlertLevelGroupflight).ToList(),
                                 Update = true                                
                             };
                             Helpers.ExternalComHelper.SendUpdate(_groupFlightTrafficAlert, _config);
@@ -652,7 +653,7 @@ namespace VatsimTrafficNotify.Process
             var grouped = planes.Select(p => p.flight_plan.departure + "-" + p.flight_plan.arrival)
                 .GroupBy(ba => ba)
                 .Select(itemGroup => new { Item = itemGroup.Key, Count = itemGroup.Count() }).OrderByDescending(bap => bap.Count);
-            var list = grouped.Where(g => g.Count >= _config.AlertLevelGroupflight).ToList();            
+            var list = grouped.Where(g => g.Count > 1).ToList();            
             foreach (var item in list)
             {
                 var apName = item.Item.ToString().Split('-');
@@ -660,7 +661,8 @@ namespace VatsimTrafficNotify.Process
                 var info = new AirportInfo()
                 {
                     Icao = (isInbound ? apName[1] : apName[0]),
-                    Count = item.Count
+                    Count = item.Count,
+                    Route = $"{apName[0]}->{apName[1]}"
                 };
                 if (isInbound)
                 {
@@ -691,7 +693,8 @@ namespace VatsimTrafficNotify.Process
                 var airportLocation = new GeoCoordinate(airport.Latitude, airport.Longitude);               
                 var planesInRange = planes.Where(p => 
                     new GeoCoordinate(p.latitude, p.longitude)
-                    .GetDistanceTo(airportLocation) * _toNM < 100)
+                    .GetDistanceTo(airportLocation) * _toNM < 100
+                    && (p.flight_plan.departure == airport.ICAO || p.flight_plan.arrival == airport.ICAO))
                     .ToList();
                if (planesInRange.Count >= _config.AlertLevelAirport)
                 {

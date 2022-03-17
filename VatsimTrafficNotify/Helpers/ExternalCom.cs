@@ -27,7 +27,7 @@ namespace VatsimTrafficNotify.Helpers
                     case "Area":
                         growString = isGrow ? $"Update: Traffic further increasing in {config.RegionName}" : $"Alert: Traffic increasing in {config.RegionName}";
                         message = $"**{growString}**{Environment.NewLine}" +
-                            $"Aircraft Count: {alert.AircraftCount} ({alert.Inbounds.Count()} inbound, {alert.Outbounds.Count} outbound)";
+                            $"Aircraft Count: {alert.AircraftCount} ({alert.Inbounds.Count()} inbound, {alert.Outbounds.Count} outbound, {(alert.Planes.Count - alert.Outbounds.Count - alert.Inbounds.Count)} outbound)";
                         break;
                     case "Airport":
                         growString = isGrow ? $"Update: Traffic further increasing around airports" : $"Alert: Traffic increasing around airports";
@@ -47,14 +47,14 @@ namespace VatsimTrafficNotify.Helpers
                         {
                             if (airport.FirstArrivalTime == null)
                             {
-                                message += $"*Outbound from {airport.Icao}: {airport.Count}* {Environment.NewLine}";
+                                message += $"*{airport.Route}: {airport.Count}* {Environment.NewLine}";
                             }
                             else
                             {
                                 var timeSpan = airport.FirstArrivalTimespan.Split(':');
                                 var hourStr = int.Parse(timeSpan[0]) != 1 ? "hours" : "hour";
                                 var minuteStr = int.Parse(timeSpan[1]) != 1 ? "minutes" : "minute";
-                                message += $"*Inbound to {airport.Icao}: {airport.Count}, first arriving at {airport.FirstArrivalTime}z (in about {int.Parse(timeSpan[0])} {hourStr} and {int.Parse(timeSpan[1])} {minuteStr})* {Environment.NewLine}";
+                                message += $"*{airport.Route}: {airport.Count}, first arriving at {airport.FirstArrivalTime}z (in about {int.Parse(timeSpan[0])} {hourStr} and {int.Parse(timeSpan[1])} {minuteStr})* {Environment.NewLine}";
                             }
                         }
                         break;

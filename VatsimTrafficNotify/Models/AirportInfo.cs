@@ -13,5 +13,6 @@ namespace VatsimTrafficNotify.Models
         public int OutboundsCount { get; set; }
         public string FirstArrivalTime { get; set; }
         public string FirstArrivalTimespan { get; set; }
+        public string Route { get; set; }
     }
 }
