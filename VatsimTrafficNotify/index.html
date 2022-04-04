@@ -68,7 +68,7 @@
         l = data;
 
         let log = data.d.LastLog.split(',');
-        if (log.length == 8) {
+        if (log.length == 10) {
           let str = `
                                       <div class="tags has-addons mb-0 are-large"><span class="tag is-success">Region</span><span class="tag">${log[1]}</span></div>
                                       <br />
@@ -77,6 +77,8 @@
                                           <div class="tags has-addons mb-0 are-medium"><span class="tag is-info">FAOR</span><span class="tag">${log[2]}</span></div>
                                           <div class="tags has-addons mb-0 are-medium"><span class="tag is-info">FACT</span><span class="tag">${log[3]}</span></div>
                                           <div class="tags has-addons mb-0 are-medium"><span class="tag is-info">FALE</span><span class="tag">${log[4]}</span></div>
+                                            <div class="tags has-addons mb-0 are-medium"><span class="tag is-info">FYWH</span><span class="tag">${log[8]}</span></div>
+                                            <div class="tags has-addons mb-0 are-medium"><span class="tag is-info">FQMA</span><span class="tag">${log[9]}</span></div>
                                         </div>
                                         <div class="column">
                                           <div class="tags has-addons mb-0 are-medium"><span class="tag is-warning">Inbound</span><span class="tag">${log[5]}</span></div>

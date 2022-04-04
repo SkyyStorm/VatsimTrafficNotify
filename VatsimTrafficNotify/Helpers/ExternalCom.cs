@@ -27,7 +27,7 @@ namespace VatsimTrafficNotify.Helpers
                     case "Area":
                         growString = isGrow ? $"Update: Traffic further increasing in {config.RegionName}" : $"Alert: Traffic increasing in {config.RegionName}";
                         message = $"**{growString}**{Environment.NewLine}" +
-                            $"Aircraft Count: {alert.AircraftCount} ({alert.Inbounds.Count()} inbound, {alert.Outbounds.Count} outbound, {(alert.Planes.Count - alert.Outbounds.Count - alert.Inbounds.Count)} outbound)";
+                            $"Aircraft Count: {alert.AircraftCount} ({alert.Inbounds.Count()} inbound, {alert.Outbounds.Count} outbound, {(alert.Planes.Count - alert.Outbounds.Count - alert.Inbounds.Count)} regional)";
                         break;
                     case "Airport":
                         growString = isGrow ? $"Update: Traffic further increasing around airports" : $"Alert: Traffic increasing around airports";

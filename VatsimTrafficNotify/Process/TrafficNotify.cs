@@ -2,8 +2,10 @@
 using System;
 using System.Collections.Generic;
 using System.Device.Location;
+using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Threading;
 using System.Web.Hosting;
 using VatsimATCInfo.Helpers;
@@ -68,6 +70,8 @@ namespace VatsimTrafficNotify.Process
         private static int _trafficFAOR = 0;
         private static int _trafficFACT = 0;
         private static int _trafficFALE = 0;
+        private static int _trafficFYWH = 0;
+        private static int _trafficFQMA = 0;        
         private static string _lastLog = "";
 
         public static object GetAlerts()
@@ -270,9 +274,29 @@ namespace VatsimTrafficNotify.Process
 
             if (_config.TelegramSendDebug)
             {
-                ExternalComHelper.SendMessage("Restarted monitoring (v0.9)", _config);
+                ExternalComHelper.SendMessage("Restarted monitoring (v1.0)", _config);
             }
-            
+
+            //// IMAGE
+            //var imageDir = AppDomain.CurrentDomain.BaseDirectory;
+            //double[] testCoords = new double[] { -26.1392, 28.246 };
+            //var url = $"https://stadiamaps.com/static/alidade_smooth_dark?api_key=045c51c2-5a59-488a-981c-953f134f4834&center={testCoords[0]},{testCoords[1]}&zoom=8&markers=-26.1392, 28.246,alidade_smooth_dark_sm&size=250x250@2x";
+            //if (!Directory.Exists(Path.Combine(imageDir, "temp")))
+            //{
+            //    Directory.CreateDirectory(Path.Combine(imageDir, "temp"));
+            //}
+            //using (WebClient wc = new WebClient())
+            //{
+            //    wc.DownloadFile(url, Path.Combine(imageDir, "temp", "lastmap.png"));
+            //}
+            //Bitmap bm = new Bitmap(Path.Combine(imageDir, "temp", "lastmap.png"));
+            //Graphics graphics = Graphics.FromImage(bm);
+            //Pen pen = new Pen(Color.FromArgb(120, 252, 186, 3), 2);
+            //graphics.DrawEllipse(pen, new Rectangle(120, 120, 10, 10));
+            //bm.Save(Path.Combine(imageDir, "temp", "lastmap2.png"));
+            //bm.Dispose();
+            //graphics.Dispose();
+
             while (_running)
             {
                 VatsimData vatsimData = new VatsimData();
@@ -403,7 +427,7 @@ namespace VatsimTrafficNotify.Process
                         {
                             _groupFlightTrafficAlert = null;
                         }
-                        else if (groupFlights.Count() > _groupFlightTrafficAlert.BusyAirports.Count()
+                        else if (groupFlights.Where(gf => gf.Count > _config.AlertLevelGroupflight).Count() > _groupFlightTrafficAlert.BusyAirports.Count()
                             || groupFlights.Max(gf => gf.Count) >= _groupFlightTrafficAlert.BusyAirports.Max(ba => ba.Count) + _config.AlertLevelGrow)
                         {
                             _groupFlightTrafficAlert.Update = true;
@@ -453,7 +477,7 @@ namespace VatsimTrafficNotify.Process
                                 .Where(p => !_config.RegionCodes.Any(c => c == p.flight_plan.departure.ToUpper().Substring(0, 2))
                                 && _config.RegionCodes.Any(c => c == p.flight_plan.arrival.ToUpper().Substring(0, 2))).ToList().Count();
                             int regional = allPlanesInRange.Count() - localInboundCount - localOutboundCount;
-                            var str = $"{time},{flightsInRegion},{_trafficFAOR},{_trafficFACT},{_trafficFALE},{localInboundCount},{localOutboundCount},{regional}";
+                            var str = $"{time},{flightsInRegion},{_trafficFAOR},{_trafficFACT},{_trafficFALE},{localInboundCount},{localOutboundCount},{regional},{_trafficFQMA},{_trafficFYWH}";
                             sr.WriteLine(str);
                             _lastLog = str;
                         }
@@ -462,6 +486,8 @@ namespace VatsimTrafficNotify.Process
                     {
                         // WHYYY
                     }
+
+                   
                 }
                 catch (Exception ex)
                 {
@@ -549,6 +575,14 @@ namespace VatsimTrafficNotify.Process
                 if (airport.ICAO == "FACT")
                 {
                     _trafficFACT = planesInRange.Count();
+                }
+                if (airport.ICAO == "FYWH")
+                {
+                    _trafficFYWH = planesInRange.Count();
+                }
+                if (airport.ICAO == "FQMA")
+                {
+                    _trafficFQMA = planesInRange.Count();
                 }
             }
             return highTrafficList;
